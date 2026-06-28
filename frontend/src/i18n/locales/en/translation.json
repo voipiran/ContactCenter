@@ -1,11 +1,12 @@
 {
   "app": {
-    "title": "OpDesk",
-    "subtitle": "Asterisk PBX Real-time Monitor"
+    "title": "ContactCenter",
+    "subtitle": "ContactCenter Real-time Dashboard"
   },
   "language": {
     "select": "Language",
     "en": "English",
+    "pr": "Persian",
     "ar": "Arabic",
     "es": "Spanish",
     "pt": "Portuguese"

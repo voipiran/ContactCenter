@@ -268,7 +268,8 @@ def write_mobile_wake_conf(backend_port: int = None, wait_seconds: int = None) -
 ;
 ; Tunable: MOBILE_WAKE_WAIT (seconds to wait after the push) in the backend .env.
 ;
-[from-internal-custom]
+;VOIPIRAN
+[opdesk-mobile-wake]
 {_hook_lines("_XXX")}
 {_hook_lines("_XXXX")}"""
     try:
@@ -289,23 +290,60 @@ def write_mobile_wake_conf(backend_port: int = None, wait_seconds: int = None) -
             log.error(f"Failed to write {EXTENSIONS_MOBILE_WAKE_CONF}: {result.stderr}")
             return False
 
-        # Ensure extensions_custom.conf includes the new file
-        include_line = f"#include {os.path.basename(EXTENSIONS_MOBILE_WAKE_CONF)}"
-        existing = ""
-        if os.path.exists(EXTENSIONS_CUSTOM_CONF):
-            with open(EXTENSIONS_CUSTOM_CONF, 'r') as f:
-                existing = f.read()
 
-        if include_line not in existing:
-            if existing and not existing.endswith('\n'):
-                existing += '\n'
-            existing += include_line + '\n'
-            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.conf') as tmp:
-                tmp.write(existing)
-                tmp_path = tmp.name
-            subprocess.run(['sudo', 'cp', tmp_path, EXTENSIONS_CUSTOM_CONF], capture_output=True)
-            subprocess.run(['sudo', 'chmod', '644', EXTENSIONS_CUSTOM_CONF], capture_output=True)
-            os.unlink(tmp_path)
+
+# VOIPIRAN: Add mobile wake include at the end of [from-internal-custom]
+
+include_line = "include => opdesk-mobile-wake"
+
+existing = ""
+if os.path.exists(EXTENSIONS_CUSTOM_CONF):
+    with open(EXTENSIONS_CUSTOM_CONF, "r") as f:
+        existing = f.read()
+
+if include_line not in existing:
+
+    lines = existing.splitlines()
+    output = []
+
+    in_context = False
+    inserted = False
+
+    for line in lines:
+
+        # Enter from-internal-custom
+        if line.strip().lower() == "[from-internal-custom]":
+            in_context = True
+            output.append(line)
+            continue
+
+        # Next context reached -> insert before it
+        if in_context and line.strip().startswith("[") and line.strip().endswith("]"):
+            output.append(include_line)
+            inserted = True
+            in_context = False
+
+        output.append(line)
+
+    # File ended while still inside from-internal-custom
+    if in_context and not inserted:
+        output.append(include_line)
+        inserted = True
+
+    # Context does not exist
+    if not inserted:
+        output.append("")
+        output.append("[from-internal-custom]")
+        output.append(include_line)
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".conf") as tmp:
+        tmp.write("\n".join(output) + "\n")
+        tmp_path = tmp.name
+
+    subprocess.run(["sudo", "cp", tmp_path, EXTENSIONS_CUSTOM_CONF], capture_output=True)
+    subprocess.run(["sudo", "chmod", "644", EXTENSIONS_CUSTOM_CONF], capture_output=True)
+    os.unlink(tmp_path)
+
 
         log.info(f"Mobile wake dialplan written to {EXTENSIONS_MOBILE_WAKE_CONF}")
         return True

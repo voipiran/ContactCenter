@@ -2,11 +2,12 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import en from './locales/en/translation.json';
-import ar from './locales/ar/translation.json';
-import es from './locales/es/translation.json';
-import pt from './locales/pt/translation.json';
+import fa from './locales/fa/translation.json';
+//import ar from './locales/ar/translation.json';
+//import es from './locales/es/translation.json';
+//import pt from './locales/pt/translation.json';
 
-const SUPPORTED_LANGUAGES = ['en', 'ar', 'es', 'pt'] as const;
+const SUPPORTED_LANGUAGES = ['en', 'fa'] as const;
 const storedLang = localStorage.getItem('opdesk-lang');
 const savedLang = SUPPORTED_LANGUAGES.includes(storedLang as (typeof SUPPORTED_LANGUAGES)[number])
   ? storedLang!
@@ -17,9 +18,7 @@ i18n
   .init({
     resources: {
       en: { translation: en },
-      ar: { translation: ar },
-      es: { translation: es },
-      pt: { translation: pt },
+      fa: { translation: fa },
     },
     lng: savedLang,
     fallbackLng: 'en',

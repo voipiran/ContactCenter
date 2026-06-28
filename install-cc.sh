@@ -940,6 +940,27 @@ fi
 # Default credentials are managed by schema.sql
 ADMIN_INIT_PASSWORD_HASH=""
 
+# VOIPIRAN: Get admin password hash from CCPANEL
+
+CCPANEL_ADMIN_HASH=$(mysql -u root -p"$_root_pass" -Nse "
+SELECT password
+FROM voipiran.users
+WHERE user_name='admin'
+LIMIT 1;
+" 2>/dev/null)
+
+if [ -n "$CCPANEL_ADMIN_HASH" ]; then
+
+    echo "$CCPANEL_ADMIN_HASH" > "$PROJECT_ROOT/backend/.admin_init_hash"
+
+    echo -e "${GREEN}VOIPIRAN: CCPANEL admin password hash loaded${NC}"
+
+else
+
+    echo -e "${YELLOW}VOIPIRAN: CCPANEL admin password hash not found${NC}"
+
+fi
+
 # # --- Admin Password Setup (fresh install only) ---
 # ADMIN_INIT_PASSWORD_HASH=""
 # if [ "$IS_UPDATE" != "true" ]; then
