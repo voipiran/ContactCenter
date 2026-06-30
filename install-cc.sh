@@ -849,8 +849,9 @@ _port_val=""
 PORT="${_port_val:-8765}"
 
 # Write Nginx vhost config — stored in project folder, symlinked into Nginx
+#VOIPIRAN
 mkdir -p "$PROJECT_ROOT/nginx"
-sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+sudo mkdir -p /etc/nginx/conf.d
 tee "$PROJECT_ROOT/nginx/opdesk.conf" > /dev/null <<NGINXEOF
 upstream opdesk_app  { server 127.0.0.1:$PORT; keepalive 32; }
 upstream asterisk_ws { server 127.0.0.1:8088; keepalive 16; }
@@ -921,13 +922,12 @@ server {
     listen $NGINX_HTTP_PORT;
     listen [::]:$NGINX_HTTP_PORT;
     server_name $NGINX_SERVER_NAME;
-    return 301 https://\$host\$request_uri;
+    return 301 https://\$host:$NGINX_HTTPS_PORT\$request_uri;
 }
 NGINXEOF
 
-sudo ln -sf "$PROJECT_ROOT/nginx/opdesk.conf" /etc/nginx/sites-available/opdesk
-sudo ln -sf /etc/nginx/sites-available/opdesk /etc/nginx/sites-enabled/opdesk
-sudo rm -f /etc/nginx/sites-enabled/default
+sudo cp "$PROJECT_ROOT/nginx/opdesk.conf" /etc/nginx/conf.d/opdesk.conf
+sudo chmod 644 /etc/nginx/conf.d/opdesk.conf
 if sudo nginx -t 2>/dev/null; then
     sudo systemctl reload nginx 2>/dev/null || sudo systemctl start nginx 2>/dev/null || true
     echo -e "${GREEN}Nginx configured and running (config: $PROJECT_ROOT/nginx/opdesk.conf)${NC}"
